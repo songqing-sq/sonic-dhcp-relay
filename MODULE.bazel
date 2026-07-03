@@ -1,0 +1,51 @@
+module(
+    name = "dhcprelay",
+    version = "1.0.0-0",
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
+bazel_dep(name = "sonic-swss-common", version = "1.0.0", repo_name = "sonic_swss_common")
+bazel_dep(name = "libnl3", version = "3.7.0")
+bazel_dep(name = "libyang3", version = "3.12.2")
+bazel_dep(name = "rules_distroless", version = "0.0.0")
+bazel_dep(name = "platforms", version = "1.1.0")
+
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.sources_list(
+    architectures = ["amd64", "arm64"],
+    components = ["main"],
+    suites = ["trixie", "trixie-updates"],
+    uris = ["https://deb.debian.org/debian"],
+)
+apt.sources_list(
+    architectures = ["amd64", "arm64"],
+    components = ["main"],
+    suites = ["trixie-security"],
+    uris = ["https://security.debian.org/debian-security"],
+)
+apt.install(
+    dependency_set = "dhcprelay_deps",
+    packages = [
+        "libevent-dev",
+        "libboost-thread1.83-dev",
+        "libboost-system1.83-dev",
+    ],
+    suites = ["trixie", "trixie-updates", "trixie-security"],
+)
+use_repo(apt, "dhcprelay_deps")
+
+# PcapPlusPlus v24.09 for dhcp4relay. The patch relaxes DHCP source port
+# validation (accepts random ephemeral src ports, not just 67/68).
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "pcapplusplus",
+    build_file = "//:pcapplusplus.BUILD",
+    patch_args = ["-p1"],
+    patches = ["//dhcp4relay/patch:0001-dhcpv4-relay-accept-random-src-port.patch"],
+    sha256 = "b14998ecf5718c2bfb6f709060e53f7ef67639b98bf2222a3cd23d820d70acdc",
+    strip_prefix = "PcapPlusPlus-24.09",
+    urls = ["https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v24.09.tar.gz"],
+)

@@ -1,0 +1,7 @@
+exports_files(
+    [
+        "0001-dhcpv4-relay-accept-random-src-port.patch",
+        "series",
+    ],
+    visibility = ["//visibility:public"],
+)

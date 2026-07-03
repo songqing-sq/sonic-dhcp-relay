@@ -1,0 +1,122 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@sonic_build_infra//sonic_deb:sonic_deb.bzl", "sonic_deb")
+
+package(default_visibility = ["//visibility:public"])
+
+VERSION = "1.0.0-0"
+
+COPTS = [
+    "-Wall",
+    "-std=c++17",
+    "-fPIE",
+]
+
+# ---------------------------------------------------------------------------
+# dhcp6relay
+# ---------------------------------------------------------------------------
+
+cc_binary(
+    name = "dhcp6relay",
+    srcs = [
+        "dhcp6relay/src/config_interface.cpp",
+        "dhcp6relay/src/config_interface.h",
+        "dhcp6relay/src/main.cpp",
+        "dhcp6relay/src/relay.cpp",
+        "dhcp6relay/src/relay.h",
+        "dhcp6relay/src/sender.cpp",
+        "dhcp6relay/src/sender.h",
+    ],
+    copts = COPTS,
+    dynamic_deps = [
+        "@libnl3//:libnl_3_shared",
+        "@libnl3//:libnl_nf_3_shared",
+        "@libnl3//:libnl_route_3_shared",
+        "@libyang3//:yang_shared",
+        "@sonic_swss_common//:swsscommon_shared",
+    ],
+    includes = ["dhcp6relay/src"],
+    linkopts = [
+        "-levent",
+        "-lhiredis",
+        "-lpthread",
+        "-lboost_thread",
+        "-lboost_system",
+    ],
+    deps = [
+        "@dhcprelay_deps//libboost-system1.83-dev:boost_system",
+        "@dhcprelay_deps//libboost-thread1.83-dev:boost_thread",
+        "@dhcprelay_deps//libevent-dev:libevent",
+        "@sonic_swss_common//:swsscommon",
+    ],
+)
+
+sonic_deb(
+    name = "sonic-dhcp6relay_{}.deb".format(VERSION),
+    package = "sonic-dhcp6relay",
+    version = VERSION,
+    content = {
+        "/usr/sbin:*:0755": [":dhcp6relay"],
+    },
+    maintainer = "Kelly Yeh <kellyyeh@microsoft.com>",
+    description = "SONiC DHCPv6 Relay",
+    homepage = "https://github.com/Azure/sonic-buildimage",
+    gen_dbg = True,
+    visibility = ["//visibility:public"],
+)
+
+# ---------------------------------------------------------------------------
+# dhcp4relay - uses only Packet++ layer classes, not Pcap++ live capture.
+# ---------------------------------------------------------------------------
+
+cc_binary(
+    name = "dhcp4relay",
+    srcs = [
+        "dhcp4relay/src/dhcp4_sender.cpp",
+        "dhcp4relay/src/dhcp4_sender.h",
+        "dhcp4relay/src/dhcp4relay.cpp",
+        "dhcp4relay/src/dhcp4relay.h",
+        "dhcp4relay/src/dhcp4relay_mgr.cpp",
+        "dhcp4relay/src/dhcp4relay_mgr.h",
+        "dhcp4relay/src/dhcp4relay_stats.cpp",
+        "dhcp4relay/src/dhcp4relay_stats.h",
+        "dhcp4relay/src/main.cpp",
+    ],
+    copts = COPTS,
+    dynamic_deps = [
+        "@libnl3//:libnl_3_shared",
+        "@libnl3//:libnl_nf_3_shared",
+        "@libnl3//:libnl_route_3_shared",
+        "@libyang3//:yang_shared",
+        "@sonic_swss_common//:swsscommon_shared",
+    ],
+    includes = ["dhcp4relay/src"],
+    linkopts = [
+        "-levent",
+        "-lhiredis",
+        "-lpthread",
+        "-lboost_thread",
+    ],
+    deps = [
+        "@dhcprelay_deps//libboost-thread1.83-dev:boost_thread",
+        "@dhcprelay_deps//libevent-dev:libevent",
+        "@pcapplusplus//:Common++",
+        "@pcapplusplus//:Packet++",
+        "@pcapplusplus//:pcapplusplus_hdrs",
+        "@sonic_swss_common//:swsscommon",
+    ],
+)
+
+sonic_deb(
+    name = "sonic-dhcp4relay_{}.deb".format(VERSION),
+    package = "sonic-dhcp4relay",
+    version = VERSION,
+    content = {
+        "/usr/sbin:*:0755": [":dhcp4relay"],
+    },
+    maintainer = "Ashutosh Agrawal <ashu@cisco.com>",
+    description = "SONiC DHCPv4 Relay",
+    homepage = "https://github.com/Azure/sonic-buildimage",
+    gen_dbg = True,
+    visibility = ["//visibility:public"],
+)
