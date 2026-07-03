@@ -8,3 +8,6 @@ dhcp4relay/debian/*
 !dhcp4relay/debian/compat
 !dhcp4relay/debian/control
 !dhcp4relay/debian/rules
+*.buildinfo
+*.changes
+
