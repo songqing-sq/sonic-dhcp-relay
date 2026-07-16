@@ -36,18 +36,12 @@ cc_binary(
         "@sonic_swss_common//:swsscommon_shared",
     ],
     includes = ["dhcp6relay/src"],
-    linkopts = [
-        "-levent",
-        "-lhiredis",
-        "-lpthread",
-        "-lboost_thread",
-        "-lboost_system",
-    ],
     deps = [
         "@dhcprelay_deps//libboost-system1.83-dev:boost_system",
         "@dhcprelay_deps//libboost-thread1.83-dev:boost_thread",
         "@dhcprelay_deps//libevent-dev:libevent",
         "@sonic_swss_common//:swsscommon",
+        "@sonic_build_infra//system_libs:pthread",
     ],
 )
 
@@ -91,12 +85,6 @@ cc_binary(
         "@sonic_swss_common//:swsscommon_shared",
     ],
     includes = ["dhcp4relay/src"],
-    linkopts = [
-        "-levent",
-        "-lhiredis",
-        "-lpthread",
-        "-lboost_thread",
-    ],
     deps = [
         "@dhcprelay_deps//libboost-thread1.83-dev:boost_thread",
         "@dhcprelay_deps//libevent-dev:libevent",
@@ -104,6 +92,7 @@ cc_binary(
         "@pcapplusplus//:Packet++",
         "@pcapplusplus//:pcapplusplus_hdrs",
         "@sonic_swss_common//:swsscommon",
+        "@sonic_build_infra//system_libs:pthread",
     ],
 )
 
